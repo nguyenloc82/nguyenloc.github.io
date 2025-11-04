@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MVP Chợ Hải Sản</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="brand"><div class="logo"></div> Chợ Hải Sản • MVP</div>
+      <div class="menu" id="navMenu"></div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section id="page-login" class="card hidden">
+      <div class="heading">
+        <h1>Đăng ký / Đăng nhập</h1>
+        <span class="badge">SĐT + OTP (mô phỏng)</span>
+      </div>
+      <div class="grid grid-2">
+        <div>
+          <div class="field">
+            <label>Số điện thoại</label>
+            <input id="loginPhone" type="tel" placeholder="VD: 0901234567" />
+            <div class="help">Demo: nhập bất kỳ số. OTP cố định <b>123456</b>.</div>
+          </div>
+          <div class="toolbar">
+            <button class="btn" id="btnSendOTP">Gửi OTP</button>
+            <input id="loginOTP" type="text" placeholder="Nhập OTP" style="max-width:160px" />
+            <button class="btn primary" id="btnVerifyOTP">Xác nhận</button>
+          </div>
+          <div class="divider"></div>
+          <div class="field">
+            <label>Vai trò</label>
+            <div class="toolbar">
+              <label class="pill"><input type="radio" name="role" value="buyer" checked /> Người mua</label>
+              <label class="pill"><input type="radio" name="role" value="fisherman" /> Ngư dân</label>
+              <label class="pill"><input type="radio" name="role" value="admin" /> Admin</label>
+            </div>
+          </div>
+          <div class="help">Nếu số điện thoại chưa có tài khoản, hệ thống sẽ tạo mới với vai trò đã chọn.</div>
+        </div>
+        <div>
+          <div class="card">
+            <h2>Tích hợp thực tế</h2>
+            <p class="muted">Nối <b>SMS Gateway</b> (Twilio, Viettel, VNPT...) tại <code>sendOTP()</code> để gửi OTP thật. Lưu ý bảo mật rate-limit & lockout.</p>
+            <ul>
+              <li>OTP 6 số, hết hạn trong 2 phút</li>
+              <li>Chống spam bằng cooldown 30 giây</li>
+              <li>Log audit tối thiểu cho auth</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-market" class="hidden">
+      <div class="heading">
+        <h1>Chợ • Listings</h1>
+        <div class="toolbar">
+          <select id="filterPort"><option value="">Tất cả cảng</option></select>
+          <select id="filterSpecies"><option value="">Tất cả loài</option></select>
+          <button class="btn" id="btnClearFilters">Xoá lọc</button>
+        </div>
+      </div>
+      <div id="marketGrid" class="grid grid-3"></div>
+    </section>
+
+    <section id="page-listing-detail" class="hidden card"></section>
+
+    <section id="page-admin-species" class="hidden">
+      <div class="heading"><h1>Admin • Danh mục loài</h1><div class="right"><span class="badge" id="speciesCount">0 loài</span></div></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Thêm / Sửa loài</h2>
+          <div class="field"><label>Tên loài</label><input id="spName" placeholder="VD: Cá ngừ đại dương"></div>
+          <div class="toolbar">
+            <button class="btn success" id="btnAddSpecies">Lưu</button>
+            <button class="btn" id="btnResetSpecies">Làm mới</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Danh sách</h2>
+          <table>
+            <thead><tr><th>Tên</th><th style="width:160px">Thao tác</th></tr></thead>
+            <tbody id="speciesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-fisher-boats" class="hidden">
+      <div class="heading"><h1>Ngư dân • Tàu</h1><span class="badge" id="boatsCount">0 tàu</span></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Thêm tàu</h2>
+          <div class="field"><label>Tên tàu</label><input id="boatName" placeholder="VD: Bình Minh 01"></div>
+          <div class="field"><label>Số hiệu</label><input id="boatCode" placeholder="VD: BV-12345"></div>
+          <button class="btn success" id="btnAddBoat">Lưu</button>
+        </div>
+        <div class="card">
+          <h2>Danh sách</h2>
+          <table>
+            <thead><tr><th>Tên</th><th>Số hiệu</th><th style="width:160px">Thao tác</th></tr></thead>
+            <tbody id="boatsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-fisher-listings" class="hidden">
+      <div class="heading"><h1>Ngư dân • Đăng bán khi sắp về</h1><span class="badge" id="yourListingsCount">0 tin</span></div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Tạo tin</h2>
+          <div class="field"><label>Chọn tàu</label><select id="listingBoat"></select></div>
+          <div class="field"><label>Cảng cập (Port)</label><input id="listingPort" list="portList" placeholder="VD: Cảng Hòn Rớ"/></div>
+          <datalist id="portList"></datalist>
+          <div class="field"><label>ETA (Ngày giờ dự kiến)</label><input id="listingETA" type="datetime-local"></div>
+          <div class="field"><label>Loài</label><select id="listingSpecies"></select></div>
+          <div class="grid grid-2">
+            <div class="field"><label>Sản lượng (kg)</label><input id="listingQty" type="number" min="1" step="1" placeholder="VD: 500"></div>
+            <div class="field"><label>Giá (VND/kg)</label><input id="listingPrice" type="number" min="1000" step="500" placeholder="VD: 120000"></div>
+          </div>
+          <div class="field"><label>Ảnh minh hoạ</label><input id="listingImage" type="file" accept="image/*"></div>
+          <button class="btn success" id="btnCreateListing">Đăng tin</button>
+          <div class="help">Không cần streaming/log real-time ở giai đoạn này.</div>
+        </div>
+        <div class="card">
+          <h2>Tin của tôi</h2>
+          <table>
+            <thead><tr><th>Loài</th><th>Cảng</th><th>ETA</th><th>SL (kg)</th><th>Giá</th><th>Đơn</th><th style="width:120px">Xoá</th></tr></thead>
+            <tbody id="yourListingsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-fisher-orders" class="hidden">
+      <div class="heading"><h1>Ngư dân • Đơn hàng</h1><span class="badge" id="sellerOrdersCount">0 đơn</span></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Listing</th><th>Người mua</th><th>Số lượng</th><th>Trạng thái</th><th style="width:220px">Thao tác</th></tr></thead>
+          <tbody id="sellerOrdersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="page-buyer-orders" class="hidden">
+      <div class="heading"><h1>Đơn hàng của tôi</h1><span class="badge" id="buyerOrdersCount">0 đơn</span></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Listing</th><th>Số lượng</th><th>Giá tạm tính</th><th>Trạng thái</th></tr></thead>
+          <tbody id="buyerOrdersTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="footer">
+      MVP Frontend thuần HTML/CSS/JS • Lưu cục bộ bằng <code>localStorage</code>. Không có push, chat, GPS, hay dashboard admin nâng cao.
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
