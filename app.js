@@ -247,7 +247,7 @@ function renderListingDetail(){
     if(!qty || qty<=0){ toast('Nhập số lượng hợp lệ'); return }
     // Tạo order
     const orders=DB.read('orders')
-    orders.push({ id:DB.genId(), listingId:l.id, buyerId=u.id, quantity:qty, status:'pending', createdAt:nowISO() })
+    orders.push({ id:DB.genId(), listingId:l.id, buyerId: u.id, quantity:qty, status:'pending', createdAt:nowISO() })
     DB.write('orders',orders)
     toast('Đã gửi đơn hàng (pending)')
     navigate('#/orders')
