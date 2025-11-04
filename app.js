@@ -117,13 +117,13 @@ function renderNav(){
     nav.appendChild(b)
   }
   add('Chợ', '#/market', true)
-  if(u?.role==='admin') add('Danh mục loài', '#/admin/species')
-  if(u?.role==='fisherman'){
+  if(u && u.role==='admin') add('Danh mục loài', '#/admin/species')
+  if(u && u.role==='fisherman'){
     add('Tàu', '#/fisher/boats')
     add('Đăng bán', '#/fisher/listings')
     add('Đơn hàng', '#/fisher/orders')
   }
-  if(u?.role==='buyer') add('Đơn của tôi', '#/orders')
+  if(u && u.role==='buyer') add('Đơn của tôi', '#/orders')
 
   nav.appendChild(el('<span style="flex:1"></span>'))
   if(u){
@@ -181,7 +181,7 @@ function renderMarket(){
     if(rows.length===0){ grid.appendChild(el('<div class="muted">Không có tin phù hợp.</div>')); return }
     rows.sort((a,b)=> new Date(a.eta)-new Date(b.eta))
     rows.forEach(l=>{
-      const sp=species.find(x=>x.id===l.speciesId)?.name||'—'
+      const sp=(species.find(x=>x.id===l.speciesId)||{}).name||'—'
       const seller=users.find(u=>u.id===l.sellerId)
       const card=el(`<div class="card">
         <div class="heading"><h2>${sp}</h2><span class="pill">ETA ${fmtDate(l.eta)}</span></div>
@@ -195,14 +195,14 @@ function renderMarket(){
           <button class="btn primary" data-view="${l.id}">Xem chi tiết</button>
         </div>
       </div>`)
-      card.querySelector('[data-view]')?.addEventListener('click',()=> navigate(`#/listing?id=${l.id}`))
+      const _v = card.querySelector('[data-view]'); if(_v) _v.addEventListener('click',()=> navigate(`#/listing?id=${l.id}`))
       grid.appendChild(card)
     })
   }
   applyFilter()
 }
 
-function getBoatName(id){ return DB.read('boats').find(b=>b.id===id)?.name||'—' }
+function getBoatName(id){ return (DB.read('boats').find(b=>b.id===id)||{}).name||'—' }
 
 /*****************
  * Trang: Listing Detail + Đặt hàng
@@ -217,10 +217,10 @@ function renderListingDetail(){
   const seller=DB.read('users').find(u=>u.id===l.sellerId)
 
   wrap.innerHTML=`
-    <div class="heading"><h1>${sp?.name||'—'}</h1><span class="pill">ETA ${fmtDate(l.eta)}</span></div>
+  <div class="heading"><h1>${(sp||{}).name||'—'}</h1><span class="pill">ETA ${fmtDate(l.eta)}</span></div>
     <div class="grid grid-2">
       <div>
-        ${l.image? `<img src="${l.image}" alt="${sp?.name}" style="width:100%;max-height:280px;object-fit:cover;border-radius:12px;border:1px solid var(--border);">`: '<div class="muted">(Không có ảnh)</div>'}
+  ${l.image? `<img src="${l.image}" alt="${(sp||{}).name}" style="width:100%;max-height:280px;object-fit:cover;border-radius:12px;border:1px solid var(--border);">`: '<div class="muted">(Không có ảnh)</div>'}
       </div>
       <div>
         <div class="field inline"><span class="tag">Cảng</span> <b>${l.port}</b></div>
@@ -272,11 +272,11 @@ function renderSpecies(){
         </div>
       </td>
     </tr>`)
-    tr.querySelector('[data-edit]')?.addEventListener('click',()=>{
+    const _edit = tr.querySelector('[data-edit]'); if(_edit) _edit.addEventListener('click',()=>{
       document.getElementById('spName').value=sp.name
       document.getElementById('btnAddSpecies').dataset.editing=sp.id
     })
-    tr.querySelector('[data-del]')?.addEventListener('click',()=>{
+    const _del = tr.querySelector('[data-del]'); if(_del) _del.addEventListener('click',()=>{
       const ok=confirm('Xoá loài này?'); if(!ok) return
       const remain=list.filter(x=>x.id!==sp.id); DB.write('species',remain); renderSpecies(); renderMarket();
     })
